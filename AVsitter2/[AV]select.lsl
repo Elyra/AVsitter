@@ -1,17 +1,17 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
+ * Copyright © the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
- * 
+ *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
  */
- 
+
 string product = "AVsitter™ seat select";
 string version = "2.2";
 integer select_type;
@@ -31,6 +31,7 @@ integer menu_handle;
 integer menu_type;
 integer variable1;
 integer verbose = 0;
+
 Out(integer level, string out)
 {
     if (verbose >= level)
@@ -38,14 +39,17 @@ Out(integer level, string out)
         llOwnerSay(llGetScriptName() + "[" + version + "] " + out);
     }
 }
+
 string strReplace(string str, string search, string replace)
 {
-    return llDumpList2String(llParseStringKeepNulls((str = "") + str, [search], []), replace);
+    return llDumpList2String(llParseStringKeepNulls(str, [search], []), replace);
 }
+
 list order_buttons(list buttons)
 {
     return llList2List(buttons, -3, -1) + llList2List(buttons, -6, -4) + llList2List(buttons, -9, -7) + llList2List(buttons, -12, -10);
 }
+
 menu(key av)
 {
     integer sitter_index = llListFindList(SITTERS, [av]);
@@ -56,7 +60,7 @@ menu(key av)
         for (i = 0; i < llGetListLength(BUTTONS); i++)
         {
             string avname = llKey2Name(llList2Key(SITTERS, i));
-            if ((!select_type) && llList2Integer(SYNCS, i) == FALSE || select_type == 2 && avname != "" && av != llList2Key(SITTERS, i))
+            if ((select_type == 0 && llList2Integer(SYNCS, i) == FALSE || select_type == 2) && avname != "" && av != llList2Key(SITTERS, i))
             {
                 menu_buttons += "⊘" + llGetSubString(strReplace(avname, " Resident", " "), 0, 11);
             }
@@ -87,7 +91,7 @@ default
 {
     state_entry()
     {
-        menu_channel = ((integer)llFrand(2147483646) + 1) * -1;
+        menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1; // 7FFFFF80 = max float < 2^31
         menu_handle = llListen(menu_channel, "", "", "");
         llListenControl(menu_handle, FALSE);
         integer i;
@@ -111,7 +115,7 @@ default
             {
                 llMessageLinked(LINK_SET, 90101, llDumpList2String(["X", message, id], "|"), id);
             }
-            else if (llGetSubString(message, 0, 0) == "⊘" || ((!select_type) && llList2Integer(SYNCS, button_index) == FALSE && llList2Key(SITTERS, button_index) != NULL_KEY && llList2Key(SITTERS, button_index) != id))
+            else if (llGetSubString(message, 0, 0) == "⊘" || (select_type == 0 && llList2Integer(SYNCS, button_index) == FALSE && llList2Key(SITTERS, button_index) != NULL_KEY && llList2Key(SITTERS, button_index) != id))
             {
                 menu(id);
             }
@@ -237,7 +241,7 @@ default
                         }
                     }
                 }
-                notecard_query = llGetNotecardLine(notecard_name, variable1 += 1);
+                notecard_query = llGetNotecardLine(notecard_name, (variable1 += 1));
             }
         }
     }

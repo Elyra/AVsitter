@@ -1,23 +1,26 @@
  /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
+ * Copyright © the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
  *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
  */
- 
+
 //  For use attaching particle chains to LockGuard V2 compatible cuffs such as Open Collar
 //  This script should be placed inside the prim that contains your poses and props.
 //  Inspiration and function (not code) from the Bright CISS system by Shan Bright & Innula Zenovka.
 
 //  SITTER:
-//      The AVsitter SITTER # the cuff settings are for.
+//      The AVsitter SITTER # the chain settings are for.
+//      -> You can use -1 to mean all sitters, but that will mean that the very same
+//         chain settings and pose list will be applied to all at the same time. If
+//         you don't want that, then you need to  add one script per sitter.
 
 integer SITTER = 0;
 
@@ -47,12 +50,13 @@ integer USES_PROPS = FALSE;
 //        for a list of LockGuard V2 Standard ID Tags and more information. The LockGuard package
 //        (with full instructions for the protocol) can be obtained in-world from Lillani Lowell's
 //        inworld location.
+//      - A pose name of "*" provides a default for all poses, should that be necessary.
 
 list POSES = [
-        "Pose1", "leftwrist,ring1,rightwrist,ring2,leftankle,ring3,rightankle,ring4",
-        "Pose2", "leftwrist,ring1,rightwrist,ring2",
-        "Pose3", "leftwrist,ring5,rightwrist,ring6,leftankle,ring7,rightankle,ring8",
-        "Pose4", "leftwrist,ring5,rightwrist,ring6"
+        "cross", "rightwrist,ring1,leftwrist,ring2,rightankle,ring3,leftankle,ring4",
+        "reverse", "rightwrist,ring2,leftwrist,ring1,rightankle,ring4,leftankle,ring3",
+        "arms", "rightwrist,ring1,leftwrist,ring2",
+        "upside", "rightwrist,ring2,leftwrist,ring1,leftankle,ring1,rightankle,ring2"
 ];
 
 //  CHAIN_PARAMETERS:
@@ -72,6 +76,7 @@ integer comm_handle;
 key avatar;
 list links;
 list ring_prims;
+integer all_poses = -2; // cache the position of the "*" if it exists, for performance
 
 goChain(list new_links)
 {
@@ -80,8 +85,7 @@ goChain(list new_links)
 //  unlink unused links
     for (; index < llGetListLength(links); index += 2)
     {
-        integer found = llListFindList(new_links, [llList2String(links, index)]);
-        if (~found)
+        if (llListFindList(new_links, [llList2String(links, index)]) == -1)
         {
             llWhisper(LOCKGUARD_CHANNEL, "lockguard " + (string)avatar + " " + llList2String(links, index) + " unlink");
         }
@@ -129,7 +133,7 @@ default
         {
             list data = llParseStringKeepNulls(msg, ["|"], []);
             integer SITTER_NUMBER = (integer)llList2String(data, 1);
-            if (SITTER_NUMBER == SITTER)
+            if (SITTER_NUMBER == SITTER || !~SITTER)
             {
                 avatar = id;
                 string EVENT = llList2String(data, 0);
@@ -158,7 +162,7 @@ default
         {//animation played
             list data = llParseString2List(msg, ["|"], []);
             string SITTER_NUMBER = llList2String(data, 0);
-            if ((integer)SITTER_NUMBER == SITTER)
+            if ((integer)SITTER_NUMBER == SITTER || !~SITTER)
             {
                 if (id != avatar)
                 {
@@ -170,6 +174,12 @@ default
                 list new_links;
 
                 integer pose_index = llListFindList(POSES, [POSE_NAME]);
+                if (!~pose_index)
+                {
+                    if (all_poses == -2)
+                        all_poses = llListFindList(POSES, (list)"*");
+                    pose_index = all_poses;
+                }
                 if (~pose_index)
                 {
                     new_links = llCSV2List(llList2String(POSES, pose_index + 1));

@@ -1,24 +1,15 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
+ * Copyright © the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
- * 
+ *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
- */
- 
- /*
- * The release version of the [AV]object Script has the original AVsitter experience
- * enabled. Scripts with this experience may not be shared in full perms form.
- * Please support further development of AVsitter by not sharing it!
- * If you acquired this script from someone else, please support the
- * developers by purchasing AVsitter (see https://avsitter.github.io)
- * and also obtain the benefit of automatic updates.
  */
 
 string version = "2.020";
@@ -30,17 +21,21 @@ integer prop_id;
 integer prop_point;
 integer experience_denied_reason;
 key originalowner;
+key parentkey;
 key give_prop_warning_request;
+
 unsit_all()
 {
     integer i = llGetNumberOfPrims();
-    while (llGetAgentSize(llGetLinkKey(i)))
+    while (llGetAgentSize(llGetLinkKey(i)) != ZERO_VECTOR)
     {
         llUnSit(llGetLinkKey(i));
         i--;
     }
 }
+
 integer verbose = 5;
+
 Out(integer level, string out)
 {
     if (verbose >= level)
@@ -48,11 +43,9 @@ Out(integer level, string out)
         llOwnerSay(llGetScriptName() + "[" + version + "] " + out);
     }
 }
+
 default
 {
-    state_entry()
-    {
-    }
     on_rez(integer start)
     {
         if (start)
@@ -61,6 +54,7 @@ default
         }
     }
 }
+
 state prop
 {
     state_entry()
@@ -85,14 +79,25 @@ state prop
         {
             if (llGetInventoryType("[AV]sitA") == INVENTORY_NONE)
             {
-                llSetClickAction(-1);
+                llSetClickAction(-1); // OSS::llSetClickAction(CLICK_ACTION_DEFAULT);
             }
         }
         else
         {
             llSetClickAction(CLICK_ACTION_TOUCH);
         }
+
+        parentkey = llList2String(llGetObjectDetails(llGetKey(), [OBJECT_REZZER_KEY]), 0);
+        if(llGetStartParameter() && !llList2Integer(llGetObjectDetails(parentkey, [OBJECT_ATTACHED_POINT]), 0))
+        {
+            llSetTimerEvent(10);
+        }
+        else
+        {
+            llSetTimerEvent(0);
+        }
     }
+
     attach(key id)
     {
         if (comm_channel)
@@ -120,6 +125,7 @@ state prop
             }
         }
     }
+
     touch_start(integer touched)
     {
         if ((!llGetAttached()) && (prop_type == 2 || prop_type == 1))
@@ -127,6 +133,7 @@ state prop
             llRequestExperiencePermissions(llDetectedKey(0), "");
         }
     }
+
     run_time_permissions(integer permissions)
     {
         if (permissions & PERMISSION_ATTACH)
@@ -146,6 +153,7 @@ state prop
             llDie();
         }
     }
+
     experience_permissions(key target_id)
     {
         if (llGetAttached())
@@ -157,12 +165,14 @@ state prop
             llAttachToAvatarTemp(prop_point);
         }
     }
+
     experience_permissions_denied(key agent_id, integer reason)
     {
         originalowner = llGetOwner();
         experience_denied_reason = reason;
         llRequestPermissions(agent_id, PERMISSION_ATTACH);
     }
+
     on_rez(integer start)
     {
         if (!llGetAttached())
@@ -170,6 +180,7 @@ state prop
             state restart_prop;
         }
     }
+
     listen(integer channel, string name, key id, string message)
     {
         list data = llParseString2List(message, ["|"], []);
@@ -197,7 +208,7 @@ state prop
             {
                 remove = TRUE;
             }
-            else if (command == "REM_INDEX" || (command == "REM_WORLD" && (!llGetAttached())))
+            else if (command == "REM_INDEX" || (command == "REM_WORLD" && !llGetAttached()))
             {
                 if (~llListFindList(data, [(string)prop_id]))
                 {
@@ -216,7 +227,7 @@ state prop
                 }
                 else
                 {
-                    if (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())))
+                    if (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())) != ZERO_VECTOR)
                     {
                         unsit_all();
                         llSleep(1);
@@ -226,12 +237,28 @@ state prop
                 }
             }
         }
-        else if (message == "PROPSEARCH" && (!llGetAttached()))
+        else if (message == "PROPSEARCH" && !llGetAttached())
         {
             llSay(comm_channel, "SAVEPROP|" + (string)prop_id);
         }
     }
+
+    timer()
+    {
+        if(llGetObjectMass(parentkey) == 0)
+        {
+            if(!llGetAttached())
+            {
+                llDie();
+            }
+            else
+            {
+                llRequestPermissions(llGetOwner(), PERMISSION_ATTACH);
+            }
+        }
+    }
 }
+
 state restart_prop
 {
     state_entry()

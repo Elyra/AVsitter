@@ -1,17 +1,17 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
+ * Copyright © the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
- * 
+ *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
  */
- 
+
 string version = "2.2";
 string notecard_name = "AVpos";
 string main_script = "[AV]sitA";
@@ -34,8 +34,51 @@ list sequential_prop_groups;
 integer HAVENTNAGGED = TRUE;
 list SITTERS;
 list SITTER_POSES;
-list ATTACH_POINTS = [ATTACH_CHEST, "chest", ATTACH_HEAD, "head", ATTACH_LSHOULDER, "left shoulder", ATTACH_RSHOULDER, "right shoulder", ATTACH_LHAND, "left hand", ATTACH_RHAND, "right hand", ATTACH_LFOOT, "left foot", ATTACH_RFOOT, "right foot", ATTACH_BACK, "back", ATTACH_PELVIS, "pelvis", ATTACH_MOUTH, "mouth", ATTACH_CHIN, "chin", ATTACH_LEAR, "left ear", ATTACH_REAR, "right ear", ATTACH_LEYE, "left eye", ATTACH_REYE, "right eye", ATTACH_NOSE, "nose", ATTACH_RUARM, "right upper arm", ATTACH_RLARM, "right lower arm", ATTACH_LUARM, "left upper arm", ATTACH_LLARM, "left lower arm", ATTACH_RHIP, "right hip", ATTACH_RULEG, "right upper leg", ATTACH_RLLEG, "right lower leg", ATTACH_LHIP, "left hip", ATTACH_LULEG, "left upper leg", ATTACH_LLLEG, "left lower leg", ATTACH_BELLY, "stomach", ATTACH_LEFT_PEC, "left pectoral", ATTACH_RIGHT_PEC, "right pectoral", ATTACH_HUD_CENTER_2, "HUD center 2", ATTACH_HUD_TOP_RIGHT, "HUD top right", ATTACH_HUD_TOP_CENTER, "HUD top", ATTACH_HUD_TOP_LEFT, "HUD top left", ATTACH_HUD_CENTER_1, "HUD center", ATTACH_HUD_BOTTOM_LEFT, "HUD bottom left", ATTACH_HUD_BOTTOM, "HUD bottom", ATTACH_HUD_BOTTOM_RIGHT, "HUD bottom right", 39, "neck", 40, "avatar center"];
+list ATTACH_POINTS =
+    [ ATTACH_CHEST,             "chest"
+    , ATTACH_HEAD,              "head"
+    , ATTACH_LSHOULDER,         "left shoulder"
+    , ATTACH_RSHOULDER,         "right shoulder"
+    , ATTACH_LHAND,             "left hand"
+    , ATTACH_RHAND,             "right hand"
+    , ATTACH_LFOOT,             "left foot"
+    , ATTACH_RFOOT,             "right foot"
+    , ATTACH_BACK,              "back"
+    , ATTACH_PELVIS,            "pelvis"
+    , ATTACH_MOUTH,             "mouth"
+    , ATTACH_CHIN,              "chin"
+    , ATTACH_LEAR,              "left ear"
+    , ATTACH_REAR,              "right ear"
+    , ATTACH_LEYE,              "left eye"
+    , ATTACH_REYE,              "right eye"
+    , ATTACH_NOSE,              "nose"
+    , ATTACH_RUARM,             "right upper arm"
+    , ATTACH_RLARM,             "right lower arm"
+    , ATTACH_LUARM,             "left upper arm"
+    , ATTACH_LLARM,             "left lower arm"
+    , ATTACH_RHIP,              "right hip"
+    , ATTACH_RULEG,             "right upper leg"
+    , ATTACH_RLLEG,             "right lower leg"
+    , ATTACH_LHIP,              "left hip"
+    , ATTACH_LULEG,             "left upper leg"
+    , ATTACH_LLLEG,             "left lower leg"
+    , ATTACH_BELLY,             "stomach"
+    , ATTACH_LEFT_PEC,          "left pectoral"
+    , ATTACH_RIGHT_PEC,         "right pectoral"
+    , ATTACH_HUD_CENTER_2,      "HUD center 2"
+    , ATTACH_HUD_TOP_RIGHT,     "HUD top right"
+    , ATTACH_HUD_TOP_CENTER,    "HUD top"
+    , ATTACH_HUD_TOP_LEFT,      "HUD top left"
+    , ATTACH_HUD_CENTER_1,      "HUD center"
+    , ATTACH_HUD_BOTTOM_LEFT,   "HUD bottom left"
+    , ATTACH_HUD_BOTTOM,        "HUD bottom"
+    , ATTACH_HUD_BOTTOM_RIGHT,  "HUD bottom right"
+    , ATTACH_NECK,              "neck"
+    , ATTACH_AVATAR_CENTER,     "avatar center"
+    ];
+
 integer verbose = 5;
+
 Out(integer level, string out)
 {
     if (verbose >= level)
@@ -43,10 +86,12 @@ Out(integer level, string out)
         llOwnerSay(llGetScriptName() + "[" + version + "] " + out);
     }
 }
+
 integer IsInteger(string data)
 {
     return llParseString2List((string)llParseString2List(data, ["8", "9"], []), ["0", "1", "2", "3", "4", "5", "6", "7"], []) == [] && data != "";
 }
+
 integer get_number_of_scripts()
 {
     integer i = 1;
@@ -56,6 +101,7 @@ integer get_number_of_scripts()
     }
     return i;
 }
+
 integer get_point(string text)
 {
     integer i;
@@ -68,6 +114,7 @@ integer get_point(string text)
     }
     return 0;
 }
+
 rez_prop(integer index)
 {
     integer type = llList2Integer(prop_types, index);
@@ -119,15 +166,18 @@ rez_prop(integer index)
         llRezAtRoot(object, pos, ZERO_VECTOR, rot, int);
     }
 }
+
 send_command(string command)
 {
     llRegionSay(comm_channel, command);
     llSay(comm_channel, command);
 }
+
 remove_all_props()
 {
     send_command("REM_ALL");
 }
+
 rez_props_by_trigger(string pose_name)
 {
     integer i;
@@ -139,6 +189,7 @@ rez_props_by_trigger(string pose_name)
         }
     }
 }
+
 list get_props_by_pose(string pose_name)
 {
     list props_to_do;
@@ -152,6 +203,7 @@ list get_props_by_pose(string pose_name)
     }
     return props_to_do;
 }
+
 remove_props_by_sitter(string sitter, integer remove_type3)
 {
     list text;
@@ -171,15 +223,17 @@ remove_props_by_sitter(string sitter, integer remove_type3)
     {
         command = "REM_WORLD";
     }
-    if (text)
+    if (text != [])
     {
         send_command(llDumpList2String([command] + text, "|"));
     }
 }
+
 remove_worn(key av)
 {
     send_command(llDumpList2String(["REM_WORN", av], "|"));
 }
+
 remove_sitter_props_by_pose(string sitter_pose, integer remove_type3)
 {
     list text;
@@ -194,7 +248,7 @@ remove_sitter_props_by_pose(string sitter_pose, integer remove_type3)
             }
         }
     }
-    if (text)
+    if (text != [])
     {
         send_command(llDumpList2String(["REM_INDEX"] + text, "|"));
     }
@@ -207,13 +261,14 @@ remove_sitter_props_by_pose_group(string msg)
     for (; i < llGetListLength(props); i++)
     {
         string prop_group = llList2String(prop_groups, llList2Integer(props, i));
-        if (!~llListFindList(groups, [prop_group]))
+        if (llListFindList(groups, [prop_group]) == -1)
         {
             groups += prop_group;
             remove_props_by_group(llListFindList(sequential_prop_groups, [prop_group]));
         }
     }
 }
+
 remove_props_by_group(integer gp)
 {
     list text;
@@ -231,16 +286,18 @@ remove_props_by_group(integer gp)
     {
         command = "REM_WORLD";
     }
-    if (text)
+    if (text != [])
     {
         send_command(llDumpList2String([command] + text, "|"));
     }
 }
+
 Readout_Say(string say)
 {
     llSleep(0.2);
-    llMessageLinked(LINK_THIS, 90022, say, "");
+    llMessageLinked(LINK_THIS, 90022, say, ""); // dump to [AV]adjuster
 }
+
 init_sitters()
 {
     SITTERS = [];
@@ -252,16 +309,19 @@ init_sitters()
         SITTER_POSES += "";
     }
 }
+
 init_channel()
 {
     llListenRemove(listen_handle);
     comm_channel = ((integer)llFrand(8999) + 1000) * -1;
     listen_handle = llListen(comm_channel, "", "", "");
 }
+
 string element(string text, integer x)
 {
     return llList2String(llParseStringKeepNulls(text, ["|"], []), x);
 }
+
 default
 {
     state_entry()
@@ -276,15 +336,17 @@ default
             notecard_query = llGetNotecardLine(notecard_name, 0);
         }
     }
+
     on_rez(integer start)
     {
         init_channel();
     }
+
     link_message(integer sender, integer num, string msg, key id)
     {
         if (sender == llGetLinkNumber())
         {
-            if (num == 90045)
+            if (num == 90045) // play pose
             {
                 list data = llParseStringKeepNulls(msg, ["|"], []);
                 integer sitter = (integer)llList2String(data, 0);
@@ -297,8 +359,9 @@ default
                     remove_sitter_props_by_pose_group(given_posename);
                     rez_props_by_trigger(given_posename);
                 }
+                return;
             }
-            else if (num == 90200 || num == 90220)
+            if (num == 90200 || num == 90220) // rez or clear prop with/without sending menu back
             {
                 list ids = llParseStringKeepNulls(id, ["|"], []);
                 key sitting_av_or_sitter = (key)llList2String(ids, -1);
@@ -332,7 +395,7 @@ default
                         if (llList2Key(SITTERS, i) == sitting_av_or_sitter || id == "" || (string)sitting_av_or_sitter == (string)i)
                         {
                             integer index = llListFindList(prop_triggers, [(string)i + "|" + msg]);
-                            if (!~index)
+                            if (index == -1)
                             {
                                 if (llGetInventoryType(main_script) != INVENTORY_SCRIPT)
                                 {
@@ -351,23 +414,26 @@ default
                         }
                     }
                 }
-                if (sitting_av_or_sitter)
+                if (sitting_av_or_sitter) // OSS::if (osIsUUID(sitting_av_or_sitter) && sitting_av_or_sitter != NULL_KEY)
                 {
-                    if (num == 90200)
+                    if (num == 90200) // send menu back?
                     {
+                        // send menu to same id
                         llMessageLinked(LINK_THIS, 90005, "", id);
                     }
                 }
+                return;
             }
-            if (num == 90101)
+            if (num == 90101) // menu choice
             {
                 list data = llParseString2List(msg, ["|"], []);
                 if (llList2String(data, 1) == "[SAVE]")
                 {
                     llRegionSay(comm_channel, "PROPSEARCH");
                 }
+                return;
             }
-            else if (num == 90065)
+            if (num == 90065) // stand up
             {
                 remove_props_by_sitter(msg, FALSE);
                 remove_worn(id);
@@ -376,22 +442,25 @@ default
                 {
                     SITTERS = llListReplaceList(SITTERS, [NULL_KEY], index, index);
                 }
+                return;
             }
-            else if (num == 90030)
+            if (num == 90030) // swap
             {
                 remove_props_by_sitter(msg, FALSE);
                 remove_props_by_sitter((string)id, FALSE);
                 SITTERS = llListReplaceList(SITTERS, [NULL_KEY], (integer)msg, (integer)msg);
                 SITTERS = llListReplaceList(SITTERS, [NULL_KEY], (integer)((string)id), (integer)((string)id));
+                return;
             }
-            else if (num == 90070)
+            if (num == 90070) // update list of sitters
             {
                 SITTERS = llListReplaceList(SITTERS, [id], (integer)msg, (integer)msg);
+                return;
             }
-            else if (num == 90171 || num == 90173)
+            if (num == 90171 || num == 90173) // [AV]adjuster/[AV]menu add PROP line
             {
                 integer sitter;
-                if (num == 90171)
+                if (num == 90171) // [AV]adjuster?
                 {
                     sitter = (integer)msg;
                     prop_triggers += [llList2String(SITTER_POSES, sitter)];
@@ -421,8 +490,9 @@ default
                 }
                 llSay(0, text);
                 llSay(0, "Position your prop and click [SAVE].");
+                return;
             }
-            else if (num == 90020 && (string)id == llGetScriptName())
+            if (num == 90020 && (string)id == llGetScriptName()) // dump our settings
             {
                 integer i;
                 for (; i < llGetListLength(prop_triggers); i++)
@@ -437,10 +507,12 @@ default
                         Readout_Say("PROP" + type + " " + llDumpList2String([element(llList2String(prop_triggers, i), 1), llList2String(prop_objects, i), element(llList2String(prop_groups, i), 1), llList2String(prop_positions, i), llList2String(prop_rotations, i), llList2String(prop_points, i)], "|"));
                     }
                 }
-                llMessageLinked(LINK_THIS, 90021, msg, llGetScriptName());
+                llMessageLinked(LINK_THIS, 90021, msg, llGetScriptName()); // notify finished dumping
+                return;
             }
         }
     }
+
     changed(integer change)
     {
         if (change & CHANGED_INVENTORY)
@@ -455,7 +527,7 @@ default
                 init_sitters();
             }
         }
-        else if (change & CHANGED_LINK)
+        if (change & CHANGED_LINK)
         {
             if (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())) == ZERO_VECTOR)
             {
@@ -467,6 +539,7 @@ default
             }
         }
     }
+
     listen(integer channel, string name, key id, string message)
     {
         list data = llParseStringKeepNulls(message, ["|"], []);
@@ -496,8 +569,9 @@ default
             {
                 Out(0, "Error, cannot find prop: " + name);
             }
+            return;
         }
-        else if (llList2String(data, 0) == "ATTACHED" || llList2String(data, 0) == "DETACHED" || llList2String(data, 0) == "REZ" || llList2String(data, 0) == "DEREZ")
+        if (llList2String(data, 0) == "ATTACHED" || llList2String(data, 0) == "DETACHED" || llList2String(data, 0) == "REZ" || llList2String(data, 0) == "DEREZ")
         {
             integer prop_index = (integer)llList2String(data, 1);
             integer sitter = (integer)llList2String(llParseStringKeepNulls(llList2String(prop_triggers, prop_index), ["|"], []), 0);
@@ -506,14 +580,17 @@ default
             {
                 llSay(comm_channel, "ATTACHTO|" + (string)sitter_key + "|" + (string)id);
             }
+            // send prop event notification
             llMessageLinked(LINK_SET, 90500, llDumpList2String([llList2String(data, 0), llList2String(prop_triggers, prop_index), llList2String(prop_objects, prop_index), llList2String(llParseStringKeepNulls(llList2String(prop_groups, prop_index), ["|"], []), 1), id], "|"), sitter_key);
+            return;
         }
-        else if (llList2String(data, 0) == "NAG" && HAVENTNAGGED && (!llGetAttached()))
+        if (llList2String(data, 0) == "NAG" && HAVENTNAGGED && (!llGetAttached()))
         {
             llRegionSayTo(llGetOwner(), 0, "To enable auto-attachments, please enable the experience '" + llList2String(data, 1) + "' by Code Violet in 'About Land'.");
             HAVENTNAGGED = FALSE;
         }
     }
+
     dataserver(key query_id, string data)
     {
         if (query_id == notecard_query)
@@ -521,58 +598,57 @@ default
             if (data == EOF)
             {
                 Out(0, (string)llGetListLength(prop_triggers) + " Props Ready, Mem=" + (string)llGetFreeMemory());
+                return;
             }
-            else
+
+            data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+            data = llStringTrim(data, STRING_TRIM);
+            string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+            list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+            if (command == "SITTER")
             {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
-                if (command == "SITTER")
-                {
-                    notecard_section = (integer)llList2String(parts, 0);
-                }
-                else if (llGetSubString(command, 0, 3) == "PROP")
-                {
-                    if (llGetListLength(prop_triggers) == 100)
-                    {
-                        Out(0, "Max props is 100, could not add prop!"); // the real limit is less than this due to memory running out first :)
-                    }
-                    else
-                    {
-                        integer prop_type;
-                        if (command == "PROP1")
-                        {
-                            prop_type = 1;
-                        }
-                        else if (command == "PROP2")
-                        {
-                            prop_type = 2;
-                        }
-                        else if (command == "PROP3")
-                        {
-                            prop_type = 3;
-                        }
-                        prop_triggers += [(string)notecard_section + "|" + llList2String(parts, 0)];
-                        prop_types += prop_type;
-                        prop_objects += llList2String(parts, 1);
-                        string prop_group = (string)notecard_section + "|" + llList2String(parts, 2);
-                        prop_groups += prop_group;
-                        if (llListFindList(sequential_prop_groups, [prop_group]) == -1)
-                        {
-                            sequential_prop_groups += prop_group;
-                        }
-                        prop_positions += (vector)llList2String(parts, 3);
-                        prop_rotations += (vector)llList2String(parts, 4);
-                        prop_points += llList2String(parts, 5);
-                    }
-                }
-                else if (command == "WARN")
-                {
-                    WARN = (integer)llList2String(parts, 0);
-                }
-                notecard_query = llGetNotecardLine(notecard_name, notecard_line += 1);
+                notecard_section = (integer)llList2String(parts, 0);
             }
+            if (llGetSubString(command, 0, 3) == "PROP")
+            {
+                if (llGetListLength(prop_triggers) == 100)
+                {
+                    Out(0, "Max props is 100, could not add prop!"); // the real limit is less than this due to memory running out first :)
+                }
+                else
+                {
+                    integer prop_type;
+                    if (command == "PROP1")
+                    {
+                        prop_type = 1;
+                    }
+                    if (command == "PROP2")
+                    {
+                        prop_type = 2;
+                    }
+                    if (command == "PROP3")
+                    {
+                        prop_type = 3;
+                    }
+                    prop_triggers += [(string)notecard_section + "|" + llList2String(parts, 0)];
+                    prop_types += prop_type;
+                    prop_objects += llList2String(parts, 1);
+                    string prop_group = (string)notecard_section + "|" + llList2String(parts, 2);
+                    prop_groups += prop_group;
+                    if (llListFindList(sequential_prop_groups, [prop_group]) == -1)
+                    {
+                        sequential_prop_groups += prop_group;
+                    }
+                    prop_positions += (vector)llList2String(parts, 3);
+                    prop_rotations += (vector)llList2String(parts, 4);
+                    prop_points += llList2String(parts, 5);
+                }
+            }
+            if (command == "WARN")
+            {
+                WARN = (integer)llList2String(parts, 0);
+            }
+            notecard_query = llGetNotecardLine(notecard_name, notecard_line += 1);
         }
     }
 }

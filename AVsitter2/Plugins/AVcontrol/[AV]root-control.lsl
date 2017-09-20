@@ -1,17 +1,17 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
+ * Copyright © the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
- * 
+ *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
  */
- 
+
 string product = "AVsitter™ Menu Control";
 string version = "2.2";
 string security_script = "[AV]root-security";
@@ -26,6 +26,7 @@ integer menu_channel;
 integer menu_handle;
 key key_request;
 integer verbose = 1;
+
 Out(integer level, string out)
 {
     if (verbose >= level)
@@ -33,14 +34,17 @@ Out(integer level, string out)
         llOwnerSay(llGetScriptName() + "[" + version + "]:" + out);
     }
 }
+
 list order_buttons(list buttons)
 {
     return llList2List(buttons, -3, -1) + llList2List(buttons, -6, -4) + llList2List(buttons, -9, -7) + llList2List(buttons, -12, -10);
 }
+
 string strReplace(string str, string search, string replace)
 {
     return llDumpList2String(llParseStringKeepNulls(str, [search], []), replace);
 }
+
 controller_menu(key id)
 {
     CONTROLLER = id;
@@ -58,7 +62,7 @@ controller_menu(key id)
     }
     else
     {
-        if (llGetListLength(SITTERS) == 1 && ((!check_for_RLV()) || (!~llListFindList(DESIGNATIONS_NOW, ["S"])) || llGetListLength(DESIGNATIONS_NOW) == 1))
+        if (llGetListLength(SITTERS) == 1 && ((!check_for_RLV()) || (llListFindList(DESIGNATIONS_NOW, ["S"]) == -1) || llGetListLength(DESIGNATIONS_NOW) == 1))
         {
             if (check_for_RLV())
             {
@@ -104,13 +108,15 @@ controller_menu(key id)
         }
     }
 }
+
 dialog(string text, list menu_items, key id)
 {
     llListenRemove(menu_handle);
-    menu_handle = llListen(menu_channel = ((integer)llFrand(2147483646) + 1) * -1, "", id, "");
+    menu_handle = llListen(menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1, "", id, ""); // 7FFFFF80 = max float < 2^31
     llDialog(id, product + " " + version + "\n\n" + text + "\n", order_buttons(menu_items), menu_channel);
     llSetTimerEvent(120);
 }
+
 integer check_for_RLV()
 {
     if (llGetInventoryType(RLV_script) == INVENTORY_SCRIPT)
@@ -119,20 +125,24 @@ integer check_for_RLV()
     }
     return FALSE;
 }
+
 default
 {
     state_entry()
     {
         llSetTimerEvent(0);
     }
+
     on_rez(integer x)
     {
         llResetScript();
     }
+
     timer()
     {
         llListenRemove(menu_handle);
     }
+
     link_message(integer sender, integer num, string msg, key id)
     {
         if (num == 90007)
@@ -156,6 +166,7 @@ default
             DESIGNATIONS_NOW = llParseStringKeepNulls(msg, ["|"], []);
         }
     }
+
     listen(integer channel, string name, key id, string message)
     {
         llListenRemove(menu_handle);
@@ -185,6 +196,7 @@ default
             controller_menu(id);
         }
     }
+
     changed(integer change)
     {
         if (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())) == ZERO_VECTOR)
