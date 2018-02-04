@@ -1,4 +1,6 @@
 /*
+ * [AV]menu - Allow using props without using sitting scripts.
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -39,7 +41,7 @@ integer listen_handle;
 integer number_per_page = 9;
 integer menu_pages;
 string last_text;
-string SEP = "�"; // OSS::string SEP;
+string SEP = "�"; // OSS::string SEP = "\u007F";
 
 integer pass_security(key id)
 {
@@ -267,7 +269,7 @@ integer prop_menu(integer return_pages, key av)
             }
             else
             {
-                menu_items1 += llGetSubString(llList2String(llParseString2List(llList2String(MENU_LIST, i), ["|"], []), 0), 2, -1);
+                menu_items1 += llGetSubString(llList2String(llParseString2List(llList2String(MENU_LIST, i), ["|"], []), 0), 2, 99999);
             }
         }
     }
@@ -311,7 +313,6 @@ default
         {
             remove_script("Use only one copy of this script!");
         }
-        // OSS::SEP = llUnescapeURL("%7F");
         check_avsit();
         notecard_key = llGetInventoryKey(notecard_name);
         Out(0, "Loading...");
@@ -588,19 +589,19 @@ default
             }
             else
             {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
                 data = llStringTrim(data, STRING_TRIM);
                 string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
                 string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
                 string part1 = llList2String(parts, 1);
                 if (llGetListLength(parts) > 1)
                 {
-                    part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, -1), SEP), STRING_TRIM);
+                    part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), SEP), STRING_TRIM);
                 }
                 if (command == "TEXT")
                 {
-                    custom_text = llDumpList2String(llParseStringKeepNulls(part0, ["\\n"], []), "\n");
+                    custom_text = strReplace(part0, "\\n", "\n");
                 }
                 part0 = llGetSubString(part0, 0, 22);
                 if (command == "MENU")

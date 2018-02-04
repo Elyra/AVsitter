@@ -1,4 +1,6 @@
 /*
+ * [AV]Xcite! - Allows working with Xcite!™ and Sensations products
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -12,7 +14,7 @@
  * instructions can be found at http://avsitter.github.io
  */
 
-string product = "AVsitter™ Xcite!";
+string product = "AVsitter™ Xcite!™";
 string version = "1.02";
 string notecard_name = "[AV]Xcite_settings";
 key notecard_key;
@@ -175,20 +177,20 @@ default
             {
                 data = llStringTrim(data, STRING_TRIM);
                 string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
                 if (command == "TIMER")
                 {
-                    TIMER_DEFAULT = (integer)llList2String(parts, 0);
+                    TIMER_DEFAULT = llList2Integer(parts, 0);
                 }
-                else if (command == "DEBUG")
+                if (command == "DEBUG")
                 {
-                    DEBUG = (integer)llList2String(parts, 0);
+                    DEBUG = llList2Integer(parts, 0);
                 }
-                else if (command == "XCITE")
+                if (command == "XCITE")
                 {
                     POSE_AND_SITTER += [llStringTrim(llList2String(parts, 0), STRING_TRIM) + "|" + llList2String(parts, 1)];
                     XCITE_COMMANDS += [llList2String(parts, 2) + "|" + llList2String(parts, 3) + "|" + llList2String(parts, 4) + "|" + llList2String(parts, 5)];
-                    XCITE_TILT += (integer)llList2String(parts, 6);
+                    XCITE_TILT += llList2Integer(parts, 6);
                 }
                 notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
             }

@@ -1,4 +1,6 @@
 /*
+ * Missing-anim-finder - Finds missing or unused animations
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -83,10 +85,10 @@ default
             }
             else
             {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
                 data = llStringTrim(data, STRING_TRIM);
                 string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
                 if (command == "POSE" || command == "SYNC")
                 {
                     list anims = llList2ListStrided(llDeleteSubList(parts, 0, 0), 0, -1, 2);
@@ -100,7 +102,7 @@ default
                         ALL_USED_ANIMATIONS += llList2String(anims, i);
                     }
                 }
-                notecard_query = llGetNotecardLine(notecard_basename, variable1 += 1);
+                notecard_query = llGetNotecardLine(notecard_basename, ++variable1);
             }
         }
     }

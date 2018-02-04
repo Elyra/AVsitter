@@ -1,4 +1,6 @@
 /*
+ * [AV]select - Allow choosing specific seats rather than using [SWAP]
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -192,14 +194,14 @@ default
             }
             else
             {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
                 data = llStringTrim(data, STRING_TRIM);
                 string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
                 string part0 = llList2String(parts, 0);
                 if (command == "TEXT")
                 {
-                    CUSTOM_TEXT = llDumpList2String(llParseStringKeepNulls(part0, ["\\n"], []), "\n") + "\n";
+                    CUSTOM_TEXT = strReplace(part0, "\\n", "\n") + "\n";
                 }
                 else if (command == "SITTER")
                 {
@@ -241,7 +243,7 @@ default
                         }
                     }
                 }
-                notecard_query = llGetNotecardLine(notecard_name, (variable1 += 1));
+                notecard_query = llGetNotecardLine(notecard_name, ++variable1);
             }
         }
     }

@@ -1,4 +1,6 @@
 /*
+ * Noob-detector - Make a report about an AVsitter setup
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -84,7 +86,7 @@ default {
 state permission {
     state_entry(){
         llSetTimerEvent(120);
-        llListen(menu_channel=((integer)llFrand(0x7FFFFF80)+1)*-1,"","","");
+        llListen((menu_channel=((integer)llFrand(0x7FFFFF80)+1)*-1),"","","");
         llDialog(llGetOwner(),product+" "+version+"\n\n"+disclaimer,["OK"],menu_channel);//RLV
     }
 

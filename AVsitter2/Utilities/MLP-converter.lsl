@@ -1,4 +1,6 @@
 /*
+ * MLP-converter - Convert MLP version 2 notecards to AVsitter format
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -120,16 +122,16 @@ default
             {
                 if (llGetListLength(NOTECARDS) - notecard_pointer > 1)
                 {
-                    notecard_name = llList2String(NOTECARDS, notecard_pointer += 1);
-                    notecard_query = llGetNotecardLine(notecard_name, notecard_line = 0);
+                    notecard_name = llList2String(NOTECARDS, ++notecard_pointer);
+                    notecard_query = llGetNotecardLine(notecard_name, (notecard_line = 0));
                 }
                 else if (animator_count + 1 < animator_total)
                 {
                     animator_count++;
                     Readout_Say(" ");
                     Readout_Say("SITTER " + (string)animator_count);
-                    notecard_name = llList2String(NOTECARDS, notecard_pointer = 0);
-                    notecard_query = llGetNotecardLine(notecard_name, notecard_line = 0);
+                    notecard_name = llList2String(NOTECARDS, (notecard_pointer = 0));
+                    notecard_query = llGetNotecardLine(notecard_name, (notecard_line = 0));
                 }
                 else
                 {
@@ -145,7 +147,7 @@ default
                 if (llGetSubString(notecard_name, 0, 9) == ".MENUITEMS")
                 {
                     string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                    list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                    list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
                     if (command == "TOMENU" || command == "MENU")
                     {
                     }
@@ -194,7 +196,7 @@ default
                         }
                     }
                 }
-                notecard_query = llGetNotecardLine(notecard_name, notecard_line += 1);
+                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
             }
         }
     }

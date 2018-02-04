@@ -1,4 +1,6 @@
 /*
+ * [AV]root-security - Specify who can sit and/or use the menu
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -66,7 +68,7 @@ check_sitters()
 
 back_to_adjust(integer SCRIPT_CHANNEL, key sitter)
 {
-    llMessageLinked(LINK_SET, 90101, (string)SCRIPT_CHANNEL + "|[ADJUST]", sitter);
+    llMessageLinked(LINK_SET, 90101, (string)SCRIPT_CHANNEL + "|[ADJUST]|", sitter);
 }
 
 list order_buttons(list menu_items)
@@ -102,7 +104,12 @@ register_touch(key id, integer animation_menu_function, integer active_prim, int
 
 main_menu()
 {
-    dialog("Sit access: " + llList2String(SIT_TYPES, SIT_INDEX) + "\nMenu access: " + llList2String(MENU_TYPES, MENU_INDEX) + "\n\nChange security settings:", ["[BACK]", "Sit", "Menu"]);
+    list buttons = (list)"Sit" + "Menu";
+    if (active_sitter) // OSS::if (osIsUUID(active_sitter) && active_sitter != NULL_KEY)
+    {
+        buttons = "[BACK]" + buttons;
+    }
+    dialog("Sit access: " + llList2String(SIT_TYPES, SIT_INDEX) + "\nMenu access: " + llList2String(MENU_TYPES, MENU_INDEX) + "\n\nChange security settings:", buttons);
     lastmenu = "";
 }
 
@@ -157,14 +164,14 @@ default
                 if (id == llGetOwner())
                 {
                     active_prim = sender;
-                    active_script_channel = (integer)llList2String(data, 0);
-                    active_sitter = (key)llList2String(data, 2);
+                    active_script_channel = llList2Integer(data, 0);
+                    active_sitter = llList2Key(data, 2);
                     main_menu();
                 }
                 else
                 {
                     llRegionSayTo(id, 0, "Sorry, only the owner can change security settings.");
-                    llMessageLinked(sender, 90101, llDumpList2String([llList2String(data, 0), "[ADJUST]", id], "|"), llList2String(data, 2));
+                    llMessageLinked(sender, 90101, llList2String(data, 0) + "|[ADJUST]|" + (string)id, llList2Key(data, 2));
                 }
             }
         }
@@ -192,7 +199,7 @@ default
         {
             if (msg == "[BACK]")
             {
-                llMessageLinked(LINK_SET, 90101, llDumpList2String([active_script_channel, "[ADJUST]", id], "|"), active_sitter);
+                llMessageLinked(LINK_SET, 90101, (string)active_script_channel + "|[ADJUST]|" + (string)id, active_sitter);
             }
             else if (lastmenu == "Sit")
             {

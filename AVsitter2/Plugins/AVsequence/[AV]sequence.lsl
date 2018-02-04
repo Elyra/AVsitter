@@ -1,4 +1,6 @@
 /*
+ * [AV]sequence - Play sequences of poses.
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -199,7 +201,7 @@ stop_sequence(integer stopSound)
     sequence_running = FALSE;
     SEQUENCE_POINTER = -1;
     llSetTimerEvent(0);
-    if (stopSound && ~llListFindList(CURRENT_SEQUENCE_ACTIONS, ["SOUND"]))
+    if (stopSound && llListFindList(CURRENT_SEQUENCE_ACTIONS, ["SOUND"]) != -1)
     {
         llStopSound();
     }
@@ -267,7 +269,7 @@ default
             {
                 list datalist = llParseString2List(data, [" "], []);
                 string command = llList2String(datalist, 0);
-                data = llStringTrim(llDumpList2String(llList2List(datalist, 1, -1), " "), STRING_TRIM);
+                data = llStringTrim(llDumpList2String(llList2List(datalist, 1, 99999), " "), STRING_TRIM);
                 list commands = ["PLAY", "WAIT", "SAY", "WHISPER", "SOUND", "LOOP"];
                 if (command == "DEBUG")
                 {
@@ -363,7 +365,7 @@ state running
                 if (index != -1)
                 {
                     start_sequence(index);
-                    if (~llListFindList(CURRENT_SEQUENCE_ACTIONS, ["WAIT"]) && ~llListFindList(CURRENT_SEQUENCE_ACTIONS, ["PLAY"]))
+                    if (llListFindList(CURRENT_SEQUENCE_ACTIONS, ["WAIT"]) != -1 && llListFindList(CURRENT_SEQUENCE_ACTIONS, ["PLAY"]) != -1)
                     {
                         sequence_control();
                     }

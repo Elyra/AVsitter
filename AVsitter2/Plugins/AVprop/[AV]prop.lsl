@@ -1,4 +1,6 @@
 /*
+ * [AV]prop - Rez props when playing poses
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -107,7 +109,7 @@ integer get_point(string text)
     integer i;
     for (i = 1; i < llGetListLength(ATTACH_POINTS); i = i + 2)
     {
-        if (~llSubStringIndex(llToUpper(text), llToUpper(llList2String(ATTACH_POINTS, i))))
+        if (llSubStringIndex(llToUpper(text), llToUpper(llList2String(ATTACH_POINTS, i))) != -1)
         {
             return llList2Integer(ATTACH_POINTS, i - 1);
         }
@@ -376,7 +378,7 @@ default
                     {
                         if (llList2Key(SITTERS, i) == sitting_av_or_sitter || id == "" || (string)sitting_av_or_sitter == (string)i)
                         {
-                            remove_sitter_props_by_pose((string)i + "|" + llGetSubString(msg, 8, -1), TRUE);
+                            remove_sitter_props_by_pose((string)i + "|" + llGetSubString(msg, 8, 99999), TRUE);
                         }
                     }
                 }
@@ -385,7 +387,7 @@ default
                     integer flag;
                     for (; i < llGetListLength(SITTERS); i++)
                     {
-                        if (~llListFindList(prop_triggers, [(string)i + "|" + msg]))
+                        if (llListFindList(prop_triggers, [(string)i + "|" + msg]) != -1)
                         {
                             flag = TRUE;
                         }
@@ -438,7 +440,7 @@ default
                 remove_props_by_sitter(msg, FALSE);
                 remove_worn(id);
                 integer index = llListFindList(SITTERS, [id]);
-                if (~index)
+                if (index != -1)
                 {
                     SITTERS = llListReplaceList(SITTERS, [NULL_KEY], index, index);
                 }
@@ -551,7 +553,7 @@ default
                 if (llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0) != ZERO_VECTOR)
                 {
                     list details = [OBJECT_POS, OBJECT_ROT];
-                    rotation f = llList2Rot(details = llGetObjectDetails(llGetKey(), details) + llGetObjectDetails(id, details), 1);
+                    rotation f = llList2Rot((details = llGetObjectDetails(llGetKey(), details) + llGetObjectDetails(id, details)), 1);
                     vector target_rot = llRot2Euler(llList2Rot(details, 3) / f) * RAD_TO_DEG;
                     vector target_pos = (llList2Vector(details, 2) - llList2Vector(details, 0)) / f;
                     prop_positions = llListReplaceList(prop_positions, [target_pos], index, index);
@@ -601,10 +603,10 @@ default
                 return;
             }
 
-            data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+            data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
             data = llStringTrim(data, STRING_TRIM);
             string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-            list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+            list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
             if (command == "SITTER")
             {
                 notecard_section = (integer)llList2String(parts, 0);
@@ -648,7 +650,7 @@ default
             {
                 WARN = (integer)llList2String(parts, 0);
             }
-            notecard_query = llGetNotecardLine(notecard_name, notecard_line += 1);
+            notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
         }
     }
 }

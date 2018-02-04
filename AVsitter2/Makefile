@@ -64,7 +64,19 @@ OPENSIM=[AV]sitA.oss\
  [AV]helper.oss\
  [AV]root.oss\
  [AV]root-security.oss\
- [AV]select.oss
+ [AV]select.oss\
+ Plugins/AVcamera/[AV]camera.oss\
+ Plugins/AVfaces/[AV]faces.oss\
+ Plugins/AVprop/[AV]menu.oss\
+ Plugins/AVprop/[AV]object.oss\
+ Plugins/AVprop/[AV]prop.oss\
+ Plugins/AVsequence/[AV]sequence.oss\
+ Utilities/Anim-perm-checker.oss\
+ Utilities/AVpos-generator.oss\
+ Utilities/AVpos-shifter.oss\
+ Utilities/Missing-anim-finder.oss\
+ Utilities/MLP-converter.oss\
+ Utilities/Noob-detector.oss
 
 all: $(SLZIP) $(OSZIP)
 
@@ -79,8 +91,8 @@ $(SLZIP): $(OPTIMIZED) $(UNOPTIMIZED)
 	$(PYTHON) build-aux.py rm $@
 	$(ZIP) $@ $(OPTIMIZED) $(UNOPTIMIZED)
 
-%.lslo: %.lsl
-	$(PYTHON) $(OPTIMIZER) -H -O addstrings,shrinknames,-extendedglobalexpr -p $(PREPROC_KIND) --precmd=$(PREPROC_PATH) $< -o $@
+%.lslo %.lslt: %.lsl
+	$(PYTHON) $(OPTIMIZER) -H -O addstrings,shrinknames,-extendedglobalexpr -p $(PREPROC_KIND) --precmd=$(PREPROC_PATH) $(OFLAGS) $< -o $@
 
 $(OSZIP): $(OPENSIM)
 	$(PYTHON) build-aux.py rm $@
@@ -89,4 +101,4 @@ $(OSZIP): $(OPENSIM)
 %.oss: %.lsl
 	$(PYTHON) build-aux.py oss-process $< > $@
 
-.PHONY : all clean optimized
+.PHONY : all clean optimized opensim

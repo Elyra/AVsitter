@@ -1,4 +1,6 @@
 /*
+ * [AV]sitA - Main sitting script - needs [AV]sitB to work
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -65,7 +67,7 @@ key notecard_key;
 key notecard_query;
 integer reading_notecard_section;
 integer notecard_lines;
-key reused_key;
+string reused_key;
 integer reused_variable;
 integer my_sittarget;
 integer original_my_sittarget;
@@ -82,7 +84,7 @@ string BRAND;
 string onSit;
 integer speed_index;
 integer verbose = 0;
-string SEP = "�"; // OSS::string SEP;
+string SEP = "�"; // OSS::string SEP = "\u007F";
 
 Out(integer level, string out)
 {
@@ -109,7 +111,13 @@ dialog(string text, list menu_items)
 {
     llListenRemove(menu_handle);
     menu_handle = llListen((menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1), "", CONTROLLER, ""); // 7FFFFF80 = max float < 2^31
-    llDialog(CONTROLLER, product + " " + version + "\n\n" + text, order_buttons(menu_items), menu_channel);
+    llDialog(CONTROLLER
+             , product + " " + version + "\n\n" + text
+             , llList2List(menu_items, -3, -1)
+             + llList2List(menu_items, -6, -4)
+             + llList2List(menu_items, -9, -7)
+             + llList2List(menu_items, -12, -10)
+             , menu_channel);
 }
 
 options_menu()
@@ -160,16 +168,17 @@ adjust_pose_menu()
 
 integer IsInteger(string data)
 {
-    // This should allow for leading zeros, thus the "1"
+    // This should allow for leading zeros, hence the "1"
     return data != "" && (string)((integer)("1" + data)) == "1" + data;
 }
 
 wipe_sit_targets()
 {
     integer i;
-    for (i = 0; i <= llGetNumberOfPrims(); i++)
+    for (; i <= llGetNumberOfPrims(); i++)
     {
-        if ((string)llGetLinkPrimitiveParams(i, [PRIM_DESC]) != "-1")
+        string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+        if (desc != "-1" && llGetSubString(desc, -3, -1) != "#-1")
         {
             llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
         }
@@ -189,7 +198,8 @@ sittargets()
     {
         if (!SCRIPT_CHANNEL)
         {
-            primcount_error();
+            // primcount_error() inlined here:
+            llDialog(llGetOwner(), "\nThere aren't enough prims for required SitTargets.\nYou must have one prim for each avatar to sit!", ["OK"], 23658);
         }
         wrong_primcount = TRUE;
     }
@@ -212,7 +222,7 @@ sittargets()
         {
             integer next = llListFindList(SITTERS_SITTARGETS, [1000]);
             string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
-            desc = llGetSubString(desc, llSubStringIndex(desc, "#") + 1, -1);
+            desc = llGetSubString(desc, llSubStringIndex(desc, "#") + 1, 99999);
             if (desc != "-1")
             {
                 list data = llParseStringKeepNulls(desc, ["-"], []);
@@ -239,7 +249,13 @@ sittargets()
     }
     original_my_sittarget = my_sittarget;
     ORIGINAL_SITTERS_SITTARGETS = SITTERS_SITTARGETS;
-    prep();
+    // inline prep() here
+    has_security = has_texture = FALSE;
+    if (!SCRIPT_CHANNEL)
+    {
+        llMessageLinked(LINK_SET, 90201, "", ""); // 90201=Ask for info about plugins
+    }
+
     set_sittarget();
 }
 
@@ -300,7 +316,8 @@ set_sittarget()
     {
         target = 0;
     }
-    if ((string)llGetLinkPrimitiveParams(target, [PRIM_DESC]) != "-1")
+    reused_key = (string)llGetLinkPrimitiveParams(target, [PRIM_DESC]);
+    if (reused_key != "-1" && llGetSubString(reused_key, -3, -1) != "#-1")
     {
         llLinkSitTarget(target, target_pos - <0.,0.,0.4> + llRot2Up(target_rot) * 0.05, target_rot);
     }
@@ -349,7 +366,7 @@ apply_current_anim(integer broadcast)
                 }
                 else
                 {
-                    POSENAME = llGetSubString(POSENAME, 2, -1);
+                    POSENAME = llGetSubString(POSENAME, 2, 99999);
                 }
                 string OLD_SYNC;
                 if (OLD_POSE_NAME != CURRENT_POSE_NAME)
@@ -439,13 +456,17 @@ default
 {
     state_entry()
     {
-        // OSS::SEP = llUnescapeURL("%7F");
-        SCRIPT_CHANNEL = (integer)llGetSubString(llGetScriptName(), llSubStringIndex(llGetScriptName(), " "), -1);
+        SCRIPT_CHANNEL = (integer)llGetSubString(llGetScriptName(), llSubStringIndex(llGetScriptName(), " "), 99999);
         while (llGetInventoryType(memoryscript) != INVENTORY_SCRIPT)
         {
+            llSleep(0.1);
         }
         integer i;
-        while (i++ < get_number_of_scripts())
+        // get_number_of_scripts() inlined here:
+        while (llGetInventoryType(main_script + " " + (string)(++i)) == INVENTORY_SCRIPT)
+            ;
+
+        while (i--)
         {
             SITTERS += "";
         }
@@ -455,7 +476,15 @@ default
         }
         else
         {
-            wipe_sit_targets();
+            // wipe_sit_targets() inlined here:
+            for (i = 0; i <= llGetNumberOfPrims(); i++)
+            {
+                reused_key = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+                if (reused_key != "-1" && llGetSubString(reused_key, -3, -1) != "#-1")
+                {
+                    llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
+                }
+            }
             reused_key = llGetNumberOfNotecardLines(notecard_name);
             reading_notecard_section = TRUE;
         }
@@ -465,7 +494,8 @@ default
         {
             if (!SCRIPT_CHANNEL)
             {
-                Out(0, "Loading " + notecard_name + "...");
+                // Out() inlined here:
+                llOwnerSay(llGetScriptName() + "[" + version + "] " + "Loading " + notecard_name + "...");
             }
             notecard_query = llGetNotecardLine(notecard_name, reused_variable);
         }
@@ -513,16 +543,16 @@ default
         {
             if (id != MY_SITTER)
             {
-                id = llDumpList2String([id, MY_SITTER], "|");
+                id = (string)id + "|" + (string)MY_SITTER;
             }
-            llMessageLinked(LINK_SET, (integer)llList2String(ADJUST_MENU, index + 1), msg, id);
+            llMessageLinked(LINK_SET, llList2Integer(ADJUST_MENU, index + 1), msg, id);
         }
         else
         {
             index = llListFindList(["Position", "Rotation", "X+", "Y+", "Z+", "X-", "Y-", "Z-", "0.05m", "0.25m", "0.01m", "5°", "25°", "1°"], [msg]);
             if (msg == "[BACK]")
             {
-                llMessageLinked(LINK_SET, 90005, "", llDumpList2String([CONTROLLER, MY_SITTER], "|")); // 90005=send menu to user
+                llMessageLinked(LINK_SET, 90005, "", (string)CONTROLLER + "|" + (string)MY_SITTER); // 90005=send menu to user
             }
             else if (msg == "[POSE]")
             {
@@ -634,6 +664,8 @@ default
     {
         integer one = (integer)msg;
         integer two = (integer)((string)id);
+        integer target;
+        list data;
         if (num == 90075) // 90075=old-style helper ask to animate
         {
             if (one == SCRIPT_CHANNEL)
@@ -652,12 +684,12 @@ default
             if (one == SCRIPT_CHANNEL || two == SCRIPT_CHANNEL)
             {
                 end_sitter();
-                reused_key = llList2Key(SITTERS, one);
+                reused_key = llList2String(SITTERS, one);
                 if (one == SCRIPT_CHANNEL)
                 {
-                    reused_key = llList2Key(SITTERS, two);
+                    reused_key = llList2String(SITTERS, two);
                 }
-                if (reused_key) // OSS::if (osIsUUID(reused_key) && reused_key != NULL_KEY)
+                if ((key)reused_key) // OSS::if (osIsUUID(reused_key) && reused_key != NULL_KEY)
                 {
                     SWAPPED = TRUE;
                     llRequestPermissions(reused_key, PERMISSION_TRIGGER_ANIMATION);
@@ -696,7 +728,7 @@ default
         }
         if (num == 90298) // 90298=show SitTargets (/5 targets)
         {
-            integer target = my_sittarget;
+            target = my_sittarget;
             if (llGetNumberOfPrims() == 1 && target == 1)
             {
                 target = 0;
@@ -718,7 +750,7 @@ default
         }
         if (id == MY_SITTER)
         {
-            list data = llParseStringKeepNulls(msg, ["|"], []);
+            data = llParseStringKeepNulls(msg, ["|"], data);
             if (num == 90001) // 90001=start an overlay animation
             {
                 llStartAnimation(msg);
@@ -731,39 +763,72 @@ default
             }
             if (num == 90101) // 90101=menu option chosen
             {
-                CONTROLLER = (key)llList2String(data, 2);
-                if (llList2String(data, 1) == "[ADJUST]")
+                CONTROLLER = llList2Key(data, 2);
+                if ((msg = llList2String(data, 1)) == "[ADJUST]") // WARNING: reusing msg
                 {
-                    options_menu();
+                    // options_menu() inlined here:
+                    data = [];
+                    if (has_texture)
+                    {
+                        data += "[TEXTURE]";
+                    }
+                    if (llGetInventoryType(expression_script) == INVENTORY_SCRIPT)
+                    {
+                        data += "[FACES]";
+                    }
+                    if (has_security)
+                    {
+                        data += "[SECURITY]";
+                    }
+                    integer i;
+                    while (i < llGetListLength(ADJUST_MENU))
+                    {
+                        data += llList2String(ADJUST_MENU, i);
+                        i = i + 2;
+                    }
+                    if (llGetInventoryType(helper_object) == INVENTORY_OBJECT && llGetInventoryType(adjust_script) == INVENTORY_SCRIPT)
+                    {
+                        data += "[HELPER]";
+                    }
+                    if (!llGetListLength(data))
+                    {
+                        adjust_pose_menu();
+                        return;
+                    }
+                    data += "[POSE]";
+                    dialog("Adjust:", ["[BACK]"] + data);
+                    return;
                 }
-                else if (llList2String(data, 1) == "Harder >>" || llList2String(data, 1) == "<< Softer")
+                if (msg == "Harder >>" || msg == "<< Softer")
                 {
                     llMessageLinked(LINK_SET, 90005, "", llDumpList2String([CONTROLLER, MY_SITTER], "|"));
+                    return;
                 }
-                else if (llList2String(data, 1) == "[SWAP]")
+                if (msg == "[SWAP]")
                 {
-                    integer target_script = SCRIPT_CHANNEL + 1;
+                    // target here means target script
+                    target = SCRIPT_CHANNEL + 1;
                     list X = SITTERS + SITTERS;
                     if (llSubStringIndex(CURRENT_POSE_NAME, "P:"))
                     {
-                        while (llList2Key(X, target_script) == "" && target_script + 1 < llGetListLength(X))
+                        while (llList2Key(X, target) == "" && target + 1 < llGetListLength(X))
                         {
-                            target_script++;
+                            target++;
                         }
-                        if (llList2Key(X, target_script) == MY_SITTER)
+                        if (llList2Key(X, target) == MY_SITTER)
                         {
-                            target_script++;
+                            target++;
                         }
                     }
                     else
                     {
-                        while (llList2Key(X, target_script) != "" && target_script < llGetListLength(SITTERS) + SCRIPT_CHANNEL + 1)
+                        while (llList2String(X, target) != "" && target < llGetListLength(SITTERS) + SCRIPT_CHANNEL + 1)
                         {
-                            target_script++;
+                            target++;
                         }
                     }
-                    target_script = target_script % llGetListLength(SITTERS);
-                    llMessageLinked(LINK_THIS, 90030, (string)SCRIPT_CHANNEL, (string)target_script);
+                    target %= llGetListLength(SITTERS);
+                    llMessageLinked(LINK_THIS, 90030, (string)SCRIPT_CHANNEL, (string)target);
                 }
                 return;
             }
@@ -772,7 +837,7 @@ default
         {
             if (num == 90055) // 90055=anim info from AVsitB
             {
-                list data = llParseStringKeepNulls(id, ["|"], []);
+                data = llParseStringKeepNulls(id, ["|"], data);
                 OLD_POSE_NAME = CURRENT_POSE_NAME;
                 CURRENT_POSE_NAME = llList2String(data, 0);
                 OLD_ANIMATION_FILENAME = CURRENT_ANIMATION_FILENAME;
@@ -786,14 +851,14 @@ default
                     FIRST_ROTATION = DEFAULT_ROTATION;
                     FIRST_ANIMATION_SEQUENCE = CURRENT_ANIMATION_SEQUENCE;
                 }
-                speed_index = (integer)llList2String(data, 5);
-                apply_current_anim((integer)llList2String(data, 4));
+                speed_index = llList2Integer(data, 5);
+                apply_current_anim(llList2Integer(data, 4));
                 set_sittarget();
                 return;
             }
             if (num == 90057) // 90057=helper moved, update position
             {
-                list data = llParseStringKeepNulls(id, ["|"], []);
+                data = llParseStringKeepNulls(id, ["|"], data);
                 CURRENT_POSITION = (vector)llList2String(data, 0);
                 CURRENT_ROTATION = (vector)llList2String(data, 1);
                 sit_using_prim_params();
@@ -804,10 +869,10 @@ default
 
     changed(integer change)
     {
+        integer i;
         if (change & CHANGED_LINK)
         {
             SWAPPED = FALSE;
-            integer i;
             integer stood;
             if (SET == -1 && llGetListLength(SITTERS) > 1)
             {
@@ -879,7 +944,7 @@ default
                 }
                 for (i = 0; i < llGetListLength(SITTERS); i++)
                 {
-                    if (llList2Key(SITTERS, i) != "" && llListFindList(AVPRIMS, [llList2Key(SITTERS, i)]) == -1)
+                    if (llList2String(SITTERS, i) != "" && llListFindList(AVPRIMS, [llList2Key(SITTERS, i)]) == -1)
                     {
                         llSetTimerEvent(0);
                         stood = TRUE;
@@ -970,21 +1035,43 @@ default
                     SITTERS_SITTARGETS = ORIGINAL_SITTERS_SITTARGETS;
                     set_sittarget();
                 }
-                prep();
+                // inline prep() here
+                has_security = has_texture = FALSE;
+                if (!SCRIPT_CHANNEL)
+                {
+                    llMessageLinked(LINK_SET, 90201, "", ""); // 90201=Ask for info about plugins
+                }
             }
             if (prims != llGetObjectPrimCount(llGetKey()))
             {
                 if (!SCRIPT_CHANNEL)
                 {
-                    wipe_sit_targets();
+                    // wipe_sit_targets() inlined here:
+                    for (i = 0; i <= llGetNumberOfPrims(); i++)
+                    {
+                        reused_key = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+                        if (reused_key != "-1" && llGetSubString(reused_key, -3, -1) != "#-1")
+                        {
+                            llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
+                        }
+                    }
+
                     llMessageLinked(LINK_SET, 90150, "", ""); // 90150=ask other AVsitA scripts to place their sittargets again
                 }
-                prep();
+                // inline prep() here
+                has_security = has_texture = FALSE;
+                if (!SCRIPT_CHANNEL)
+                {
+                    llMessageLinked(LINK_SET, 90201, "", ""); // 90201=Ask for info about plugins
+                }
             }
         }
         if (change & CHANGED_INVENTORY)
         {
-            if (llGetInventoryKey(notecard_name) != notecard_key || get_number_of_scripts() != llGetListLength(SITTERS) || llGetInventoryType(memoryscript) != INVENTORY_SCRIPT)
+            // get_number_of_scripts() inlined here:
+            while (llGetInventoryType(main_script + " " + (string)(++i)) == INVENTORY_SCRIPT)
+                ;
+            if (llGetInventoryKey(notecard_name) != notecard_key || i != llGetListLength(SITTERS) || llGetInventoryType(memoryscript) != INVENTORY_SCRIPT)
             {
                 end_sitter();
                 llResetScript();
@@ -1022,13 +1109,14 @@ default
             string posename = CURRENT_POSE_NAME;
             if (llGetSubString(CURRENT_POSE_NAME, 0, 1) == "P:")
             {
-                posename = llGetSubString(CURRENT_POSE_NAME, 2, -1);
+                posename = llGetSubString(CURRENT_POSE_NAME, 2, 99999);
             }
             llMessageLinked(LINK_THIS, 90070, (string)SCRIPT_CHANNEL, MY_SITTER); // 90070=update SITTERS after permissions granted
             llMessageLinked(LINK_THIS, lnk, posename, channel_or_swap);
             if (wrong_primcount && WARN)
             {
-                primcount_error();
+                // primcount_error() inlined here:
+                llDialog(llGetOwner(), "\nThere aren't enough prims for required SitTargets.\nYou must have one prim for each avatar to sit!", ["OK"], 23658);
             }
             else if (!MTYPE)
             {
@@ -1073,15 +1161,15 @@ default
             // Request next line
             notecard_query = llGetNotecardLine(notecard_name, ++reused_variable);
 
-            data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+            data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
             data = llStringTrim(data, STRING_TRIM_HEAD);
             string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-            list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+            list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
             string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
             string part1;
             if (llGetListLength(parts) > 1)
             {
-                part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, -1), SEP), STRING_TRIM);
+                part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), SEP), STRING_TRIM);
             }
             if (command == "SITTER")
             {
@@ -1103,7 +1191,7 @@ default
                     reading_notecard_section = TRUE;
                     if (llGetListLength(parts) > 1)
                     {
-                        SITTER_INFO = llList2List(parts, 1, -1);
+                        SITTER_INFO = llList2List(parts, 1, 99999);
                     }
                 }
                 return;
@@ -1198,7 +1286,7 @@ default
                 if (llGetSubString(data, 0, 0) == "{")
                 {
                     command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
-                    parts = llParseStringKeepNulls(llDumpList2String(llParseString2List(llGetSubString(data, llSubStringIndex(data, "}") + 1, -1), [" "], [""]), ""), ["<"], []);
+                    parts = llParseStringKeepNulls(llDumpList2String(llParseString2List(llGetSubString(data, llSubStringIndex(data, "}") + 1, 99999), [" "], [""]), ""), ["<"], []);
                     string pos = "<" + llList2String(parts, 1);
                     string rot = "<" + llList2String(parts, 2);
                     if (command == FIRST_POSENAME || "P:" + command == FIRST_POSENAME)
@@ -1244,6 +1332,9 @@ default
                                 FIRST_FEMALE_ANIMATION_SEQUENCE = part1;
                             }
                         }
+                        // Don't generate empty buttons (issue #60)
+                        if (part0 == "B:")
+                            part0 = "B: ";
                         if (command == "BUTTON" && part1 == "")
                         {
                             part1 = "90200"; // default to rez prop
