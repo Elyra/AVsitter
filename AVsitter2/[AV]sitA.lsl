@@ -27,7 +27,6 @@ list SITTERS;
 integer SWAPPED;
 key MY_SITTER;
 key CONTROLLER;
-list SITTER_INFO;
 string CUSTOM_TEXT;
 list ADJUST_MENU;
 integer SET = -1;
@@ -51,6 +50,7 @@ string FIRST_MALE_ANIMATION_SEQUENCE;
 string FEMALE_POSENAME;
 string FIRST_FEMALE_ANIMATION_SEQUENCE;
 string CURRENT_ANIMATION_FILENAME;
+list SITTER_INFO = [FIRST_POSENAME]; //OSS::list SITTER_INFO; // Force error in LSO
 integer SEQUENCE_POINTER;
 vector FIRST_POSITION;
 vector FIRST_ROTATION;
@@ -67,7 +67,7 @@ key notecard_key;
 key notecard_query;
 integer reading_notecard_section;
 integer notecard_lines;
-string reused_key;
+key reused_key;
 integer reused_variable;
 integer my_sittarget;
 integer original_my_sittarget;
@@ -84,7 +84,7 @@ string BRAND;
 string onSit;
 integer speed_index;
 integer verbose = 0;
-string SEP = "�"; // OSS::string SEP = "\u007F";
+string SEP = "�"; // OSS::string SEP = "\x7F";
 
 Out(integer level, string out)
 {
@@ -178,7 +178,7 @@ wipe_sit_targets()
     for (; i <= llGetNumberOfPrims(); i++)
     {
         string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
-        if (desc != "-1" && llGetSubString(desc, -3, -1) != "#-1")
+        if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
         {
             llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
         }
@@ -316,8 +316,8 @@ set_sittarget()
     {
         target = 0;
     }
-    reused_key = (string)llGetLinkPrimitiveParams(target, [PRIM_DESC]);
-    if (reused_key != "-1" && llGetSubString(reused_key, -3, -1) != "#-1")
+    string desc = (string)llGetLinkPrimitiveParams(target, [PRIM_DESC]);
+    if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
     {
         llLinkSitTarget(target, target_pos - <0.,0.,0.4> + llRot2Up(target_rot) * 0.05, target_rot);
     }
@@ -479,8 +479,8 @@ default
             // wipe_sit_targets() inlined here:
             for (i = 0; i <= llGetNumberOfPrims(); i++)
             {
-                reused_key = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
-                if (reused_key != "-1" && llGetSubString(reused_key, -3, -1) != "#-1")
+                string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+                if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
                 {
                     llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
                 }
@@ -541,7 +541,7 @@ default
         integer index = llListFindList(ADJUST_MENU, [msg]);
         if (index != -1)
         {
-            if (id != MY_SITTER)
+            if (id != MY_SITTER && !(AMENU & 4))
             {
                 id = (string)id + "|" + (string)MY_SITTER;
             }
@@ -684,12 +684,12 @@ default
             if (one == SCRIPT_CHANNEL || two == SCRIPT_CHANNEL)
             {
                 end_sitter();
-                reused_key = llList2String(SITTERS, one);
+                reused_key = llList2Key(SITTERS, one);
                 if (one == SCRIPT_CHANNEL)
                 {
-                    reused_key = llList2String(SITTERS, two);
+                    reused_key = llList2Key(SITTERS, two);
                 }
-                if ((key)reused_key) // OSS::if (osIsUUID(reused_key) && reused_key != NULL_KEY)
+                if (reused_key) // OSS::if (osIsUUID(reused_key) && reused_key != NULL_KEY)
                 {
                     SWAPPED = TRUE;
                     llRequestPermissions(reused_key, PERMISSION_TRIGGER_ANIMATION);
@@ -750,7 +750,6 @@ default
         }
         if (id == MY_SITTER)
         {
-            data = llParseStringKeepNulls(msg, ["|"], data);
             if (num == 90001) // 90001=start an overlay animation
             {
                 llStartAnimation(msg);
@@ -761,6 +760,7 @@ default
                 llStopAnimation(msg);
                 return;
             }
+            data = llParseStringKeepNulls(msg, ["|"], data);
             if (num == 90101) // 90101=menu option chosen
             {
                 CONTROLLER = llList2Key(data, 2);
@@ -1049,8 +1049,8 @@ default
                     // wipe_sit_targets() inlined here:
                     for (i = 0; i <= llGetNumberOfPrims(); i++)
                     {
-                        reused_key = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
-                        if (reused_key != "-1" && llGetSubString(reused_key, -3, -1) != "#-1")
+                        string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+                        if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
                         {
                             llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
                         }
@@ -1149,7 +1149,7 @@ default
                     llSetText("", <1,1,1>, 1);
                     llMessageLinked(LINK_SET, 90150, "", ""); // 90150=ask other AVsitA scripts to place their sittargets again
                 }
-                llMessageLinked(LINK_THIS, 90302, (string)SCRIPT_CHANNEL, llDumpList2String([llGetListLength(SITTERS), llDumpList2String(SITTER_INFO, SEP), SET, MTYPE, ETYPE, SWAP, FIRST_POSENAME, BRAND, CUSTOM_TEXT, llDumpList2String(ADJUST_MENU, SEP), SELECT, AMENU, OLD_HELPER_METHOD, RLVDesignations, onSit], "|")); // 90302=send notecard settings to AVsitB
+                llMessageLinked(LINK_THIS, 90302, (string)SCRIPT_CHANNEL, llDumpList2String([llGetListLength(SITTERS), llDumpList2String(SITTER_INFO, SEP), SET, MTYPE, ETYPE, SWAP, FIRST_POSENAME, BRAND, CUSTOM_TEXT, llDumpList2String(ADJUST_MENU, SEP), SELECT, AMENU & 3, OLD_HELPER_METHOD, RLVDesignations, onSit], "|")); // 90302=send notecard settings to AVsitB
                 reused_variable = (llGetFreeMemory() - 5000) / 100;
                 return;
             }

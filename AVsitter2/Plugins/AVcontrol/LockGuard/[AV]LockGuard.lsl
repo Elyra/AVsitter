@@ -22,7 +22,7 @@
 //      The AVsitter SITTER # the chain settings are for.
 //      -> You can use -1 to mean all sitters, but that will mean that the very same
 //         chain settings and pose list will be applied to all at the same time. If
-//         you don't want that, then you need to  add one script per sitter.
+//         you don't want that, then you need to add one script per sitter.
 
 integer SITTER = 0;
 
@@ -77,7 +77,7 @@ integer COMM_CHANNEL = -57841689;
 integer comm_handle;
 key avatar;
 list links;
-list ring_prims;
+list ring_prims = [avatar]; //OSS::list ring_prims; // Force error if not compiled in Mono
 integer all_poses = -2; // cache the position of the "*" if it exists, for performance
 
 goChain(list new_links)

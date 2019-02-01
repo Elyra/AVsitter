@@ -22,7 +22,7 @@ list DESIGNATIONS_NOW;
 key CONTROLLER = NULL_KEY;
 integer KEY_TAKEN;
 string CONTROLLER_NAME;
-list SITTERS_MENUKEYS;
+list SITTERS_MENUKEYS = [CONTROLLER_NAME]; //OSS::list SITTERS_MENUKEYS; // Force error in LSO
 list SITTERS_SHORTNAMES;
 integer menu_channel;
 integer menu_handle;
@@ -114,7 +114,7 @@ controller_menu(key id)
 dialog(string text, list menu_items, key id)
 {
     llListenRemove(menu_handle);
-    menu_handle = llListen(menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1, "", id, ""); // 7FFFFF80 = max float < 2^31
+    menu_handle = llListen((menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1), "", id, ""); // 7FFFFF80 = max float < 2^31
     llDialog(id, product + " " + version + "\n\n" + text + "\n", order_buttons(menu_items), menu_channel);
     llSetTimerEvent(120);
 }

@@ -27,11 +27,20 @@ key SLAVE;
 string menu;
 integer menuPage;
 list folderPath;
-list folderOptions;
+list folderOptions = [menu]; //OSS::list folderOptions; // Force error in LSO
 list folderNamesFullLength;
 list CLOTHING_LAYERS = ["gloves", "jacket", "pants", "shirt", "shoes", "skirt", "socks", "underpants", "undershirt", "", "", "", "", "alpha", "tattoo"];
 list ATTACHMENT_POINTS = ["", "chest", "skull", "left shoulder", "right shoulder", "left hand", "right hand", "left foot", "right foot", "spine", "pelvis", "mouth", "chin", "left ear", "right ear", "left eyeball", "right eyeball", "nose", "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip", "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg", "stomach", "left pec", "right pec", "", "", "", "", "", "", "", "", "neck", "root"];
-list RLV_RESTRICTIONS = ["Chat", "sendchat", "sending chat", "IM", "sendim", "sending IM", "Touch", "touchall", "touching", "Names", "shownames", "seeing names", "Rez/Edit", "edit,rez", "editing and rezzing objects", "Inventory", "showinv", "accessing their inventory", "Map", "showworldmap,showminimap", "seeing their map", "Location", "showloc", "seeing their location"];
+list RLV_RESTRICTIONS =
+    [ "Chat", "sendchat", "sending chat"
+    , "IM", "sendim", "sending IM"
+    , "Touch", "touchall", "touching"
+    , "Names", "shownames", "seeing names"
+    , "Rez/Edit", "edit,rez", "editing and rezzing objects"
+    , "Inventory", "showinv", "accessing their inventory"
+    , "Map", "showworldmap,showminimap", "seeing their map"
+    , "Location", "showloc", "seeing their location"
+    ];
 string iconActive = "✘ ";
 string iconInactive = "✔ ";
 string iconEmpty = "○";
@@ -174,8 +183,8 @@ state running
             product = llList2String(data, 2);
             llListenRemove(menu_handle);
             llListenRemove(GETSTATUShandle);
-            menu_handle = llListen(menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1, "", CONTROLLER, ""); // 7FFFFF80 = max float < 2^31
-            GETSTATUShandle = llListen(RELAY_GETSTATUS_CHANNEL = (integer)llFrand(999999936), "", "", ""); // 999999936 = max float < 1e9
+            menu_handle = llListen((menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1), "", CONTROLLER, ""); // 7FFFFF80 = max float < 2^31
+            GETSTATUShandle = llListen((RELAY_GETSTATUS_CHANNEL = (integer)llFrand(999999936)), "", "", ""); // 999999936 = max float < 1e9
             if (num == 90208)
             {
                 main_menu();

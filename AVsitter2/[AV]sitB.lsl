@@ -33,7 +33,7 @@ string ADJUST_MENU;
 string SITTER_INFO;
 list MENU_LIST;
 list DATA_LIST;
-list POS_ROT_LIST;
+list POS_ROT_LIST = [CUSTOM_TEXT]; //OSS::list POS_ROT_LIST; // Force error in LSO
 integer helper_mode;
 integer has_RLV;
 integer ANIM_INDEX;
@@ -50,7 +50,7 @@ string RLVDesignations;
 string onSit;
 integer speed_index;
 integer verbose = 0;
-string SEP = "�"; // OSS::string SEP = "\u007F";
+string SEP = "�"; // OSS::string SEP = "\x7F";
 
 Out(integer level, string out)
 {
@@ -265,10 +265,10 @@ default
             animation_menu(0);
             return;
         }
-        index = llListFindList(llList2List(MENU_LIST, current_menu, 99999), ["B:" + msg]);
-        if (index != -1) index += current_menu;
+        index = llListFindList(llList2List(MENU_LIST, current_menu + 1, 99999), ["B:" + msg]);
         if (index != -1)
         {
+            index += current_menu + 1;
             list button_data = llParseStringKeepNulls(llList2String(DATA_LIST, index), [SEP], []);
             if (llList2String(button_data, 1) != "")
             {
@@ -278,6 +278,10 @@ default
             if (llGetListLength(button_data) > 2)
             {
                 id = llList2String(button_data, 2);
+                if (id == "<C>")
+                    id = CONTROLLER;
+                if (id == "<S>")
+                    id = MY_SITTER;
             }
             else if (CONTROLLER != MY_SITTER)
             {

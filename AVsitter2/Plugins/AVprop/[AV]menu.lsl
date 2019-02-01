@@ -29,9 +29,10 @@ string last_menu_avatar;
 integer menu_channel;
 key notecard_key;
 key notecard_query;
-list MENU_LIST;
+list MENU_LIST = [custom_text]; //OSS::list MENU_LIST; // Force error in LSO
 list DATA_LIST;
 integer MTYPE;
+integer LMSOURCE = 0; //lmsource self = 0, lmsource linkset = 1
 integer notecard_line;
 integer current_menu = -1;
 integer menu_page;
@@ -41,7 +42,7 @@ integer listen_handle;
 integer number_per_page = 9;
 integer menu_pages;
 string last_text;
-string SEP = "�"; // OSS::string SEP = "\u007F";
+string SEP = "�"; // OSS::string SEP = "\x7F";
 
 integer pass_security(key id)
 {
@@ -259,7 +260,7 @@ integer prop_menu(integer return_pages, key av)
     {
         if (i < llGetListLength(MENU_LIST))
         {
-            if (llSubStringIndex(llList2String(MENU_LIST, i), "M:") != -1)
+            if (llSubStringIndex(llList2String(MENU_LIST, i), "M:") == 0)
             {
                 jump end;
             }
@@ -313,6 +314,7 @@ default
         {
             remove_script("Use only one copy of this script!");
         }
+        MENU_LIST = [];
         check_avsit();
         notecard_key = llGetInventoryKey(notecard_name);
         Out(0, "Loading...");
@@ -555,7 +557,7 @@ default
 
     link_message(integer sender, integer num, string msg, key id)
     {
-        if (sender == llGetLinkNumber())
+        if (sender == llGetLinkNumber() || LMSOURCE == 1)
         {
             if (num == 90005) // send menu to id
             {
@@ -626,6 +628,10 @@ default
                 else if (command == "MTYPE")
                 {
                     MTYPE = (integer)part0;
+                }
+                else if (command == "LMSOURCE")
+                {
+                    LMSOURCE = (integer)part0;
                 }
                 notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
             }
